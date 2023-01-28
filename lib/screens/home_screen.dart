@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -8,6 +10,58 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const twentyFiveMinutes = 1500; // 25*60
+  late Timer timer;
+  int totalSeconds = twentyFiveMinutes;
+  int totalPomodoros = 0;
+  bool isRunning = false;
+
+  void onStartPressed() {
+    setState(() {
+      isRunning = true;
+    });
+    timer = Timer.periodic(
+      const Duration(seconds: 1),
+      onTick,
+    );
+  }
+
+  void onPausePressed() {
+    timer.cancel();
+    setState(() {
+      isRunning = false;
+    });
+  }
+
+  void onResetPressed() {
+    timer.cancel();
+    setState(() {
+      isRunning = false;
+      totalSeconds = twentyFiveMinutes;
+      totalPomodoros = 0;
+    });
+  }
+
+  void onTick(timer) {
+    if (totalSeconds == 0) {
+      timer.cancel();
+      setState(() {
+        isRunning = false;
+        totalPomodoros++;
+        totalSeconds = twentyFiveMinutes;
+      });
+    } else {
+      setState(() {
+        totalSeconds--;
+      });
+    }
+  }
+
+  String format(int seconds) {
+    var duration = Duration(seconds: seconds);
+    return duration.toString().split(".").first.substring(2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               alignment: Alignment.bottomCenter,
               child: Text(
-                '25:00',
+                format(totalSeconds),
                 style: TextStyle(
                   color: Theme.of(context).cardColor,
                   fontSize: 89,
@@ -34,10 +88,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: IconButton(
                 iconSize: 120,
                 color: Theme.of(context).cardColor,
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.play_circle_outlined,
-                ),
+                onPressed: isRunning ? onPausePressed : onStartPressed,
+                icon: isRunning
+                    ? const Icon(
+                        Icons.pause_circle_outlined,
+                      )
+                    : const Icon(
+                        Icons.play_circle_outlined,
+                      ),
               ),
             ),
           ),
@@ -49,25 +107,74 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Text(
-                          'Pomodoros',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).textTheme.headline1!.color,
-                          ),
+                        const SizedBox(
+                          width: 10,
                         ),
-                        Text(
-                          '0',
-                          style: TextStyle(
-                            fontSize: 58,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).textTheme.headline1!.color,
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Pomodoros',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .headline1!
+                                    .color,
+                              ),
+                            ),
+                            Text(
+                              '$totalPomodoros',
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .headline1!
+                                    .color,
+                              ),
+                            ),
+                          ],
+                        ),
+                        VerticalDivider(
+                          color: Theme.of(context).textTheme.headline1!.color,
+                          thickness: 2,
+                          indent: 80,
+                          endIndent: 80,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Reset",
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .headline1!
+                                    .color,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            IconButton(
+                              color:
+                                  Theme.of(context).textTheme.headline1!.color,
+                              iconSize: 42,
+                              onPressed: onResetPressed,
+                              icon: const Icon(
+                                Icons.restore_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          width: 10,
                         ),
                       ],
                     ),
